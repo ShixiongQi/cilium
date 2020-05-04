@@ -40,10 +40,12 @@ import (
 	"github.com/cilium/cilium/pkg/datapath/linux/probes"
 	"github.com/cilium/cilium/pkg/datapath/loader"
 	"github.com/cilium/cilium/pkg/datapath/maps"
+	datapathOption "github.com/cilium/cilium/pkg/datapath/option"
 	"github.com/cilium/cilium/pkg/defaults"
 	"github.com/cilium/cilium/pkg/envoy"
 	"github.com/cilium/cilium/pkg/flowdebug"
 	"github.com/cilium/cilium/pkg/identity"
+	ipamOption "github.com/cilium/cilium/pkg/ipam/option"
 	"github.com/cilium/cilium/pkg/ipmasq"
 	"github.com/cilium/cilium/pkg/k8s"
 	"github.com/cilium/cilium/pkg/k8s/watchers"
@@ -394,7 +396,7 @@ func init() {
 	flags.String(option.IdentityAllocationMode, option.IdentityAllocationModeKVstore, "Method to use for identity allocation")
 	option.BindEnv(option.IdentityAllocationMode)
 
-	flags.String(option.IPAM, option.IPAMHostScopeLegacy, "Backend to use for IPAM")
+	flags.String(option.IPAM, ipamOption.IPAMHostScopeLegacy, "Backend to use for IPAM")
 	option.BindEnv(option.IPAM)
 
 	flags.Int(option.IPv4ClusterCIDRMaskSize, 8, "Mask size for the cluster wide CIDR")
@@ -1017,7 +1019,7 @@ func initEnv(cmd *cobra.Command) {
 	option.Config.NAT46Prefix = r
 
 	switch option.Config.DatapathMode {
-	case option.DatapathModeVeth:
+	case datapathOption.DatapathModeVeth:
 		if name := viper.GetString(option.IpvlanMasterDevice); name != "undefined" {
 			log.WithField(logfields.IpvlanMasterDevice, name).
 				Fatal("ipvlan master device cannot be set in the 'veth' datapath mode")
@@ -1035,7 +1037,7 @@ func initEnv(cmd *cobra.Command) {
 				option.Config.EnableIPv6 = false
 			}
 		}
-	case option.DatapathModeIpvlan:
+	case datapathOption.DatapathModeIpvlan:
 		if option.Config.Tunnel != "" && option.Config.Tunnel != option.TunnelDisabled {
 			log.WithField(logfields.Tunnel, option.Config.Tunnel).
 				Fatal("tunnel cannot be set in the 'ipvlan' datapath mode")
@@ -1096,8 +1098,8 @@ func initEnv(cmd *cobra.Command) {
 		if !option.Config.EnableNodePort {
 			log.Fatalf("BPF masquerade requires NodePort (--%s=\"true\")", option.EnableNodePort)
 		}
-		if option.Config.DatapathMode == option.DatapathModeIpvlan {
-			log.Fatalf("BPF masquerade works only in veth mode (--%s=\"veth\"", option.DatapathMode)
+		if option.Config.DatapathMode == datapathOption.DatapathModeIpvlan {
+			log.Fatalf("BPF masquerade works only in veth mode (--%s=\"%s\"", option.DatapathMode, datapathOption.DatapathModeVeth)
 		}
 		if option.Config.EgressMasqueradeInterfaces != "" {
 			log.Fatalf("BPF masquerade does not allow to specify devices via --%s. Use --%s instead.", option.EgressMasqueradeInterfaces, option.Device)
