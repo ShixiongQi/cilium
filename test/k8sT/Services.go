@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cilium/cilium/pkg/uuid"
 	. "github.com/cilium/cilium/test/ginkgo-ext"
 	"github.com/cilium/cilium/test/helpers"
 
@@ -985,8 +986,35 @@ var _ = Describe("K8sServicesTest", func() {
 				var (
 					demoPolicy string
 				)
-
+				
 				BeforeAll(func() {
+					ciliumPodK8s1, err := kubectl.GetCiliumPodOnNode(helpers.CiliumNamespace, helpers.K8s1)
+					Expect(err).Should(BeNil(), fmt.Sprintf("Cannot get cilium pod on k8s1"))
+
+					monitorRes1, monitorCancel1 := kubectl.MonitorStart(helpers.CiliumNamespace, ciliumPodK8s1)
+					defer func() {
+						// Give time for the monitor to catch up
+						time.Sleep(2 * time.Second)
+						monitorCancel1()
+						monitorRes1.WaitUntilFinish()
+						monitorFile := fmt.Sprintf( "k8s1-with-l7-policy-%s.log", uuid.NewUUID().String())
+						helpers.WriteToReportFile(monitorRes1.CombineOutput().Bytes(), monitorFile)
+					}()
+
+					ciliumPodK8s2, err := kubectl.GetCiliumPodOnNode(helpers.CiliumNamespace, helpers.K8s2)
+					Expect(err).Should(BeNil(), fmt.Sprintf("Cannot get cilium pod on k8s2"))
+					monitorRes2, monitorCancel2 := kubectl.MonitorStart(helpers.CiliumNamespace, ciliumPodK8s2)
+					defer func() {
+						// Give time for the monitor to catch up
+						time.Sleep(2 * time.Second)
+						monitorCancel2()
+						monitorRes2.WaitUntilFinish()
+						monitorFile := fmt.Sprintf( "k8s2-with-l7-policy-%s.log", uuid.NewUUID().String())
+						helpers.WriteToReportFile(monitorRes2.CombineOutput().Bytes(), monitorFile)
+					}()
+
+					// Let the monitor get started since it is started in the background.
+					time.Sleep(2 * time.Second)
 					// Wait for pods to be ready before applying L7 policy that may break POD readiness probes.
 					waitPodsDs()
 					demoPolicy = helpers.ManifestGet(kubectl.BasePath(), "l7-policy-demo.yaml")
