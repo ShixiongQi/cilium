@@ -106,6 +106,12 @@ var (
 		// missing LRU support. On 4.19 and net-next we enable it with
 		// kubeProxyReplacement=strict.
 		"global.sessionAffinity.enabled": "false",
+
+		// Go all in on Hubble.
+		"global.hubble.cli.enabled":   "true",
+		"global.hubble.enabled":       "true",
+		"global.hubble.listenAddress": ":4244",
+		"global.hubble.relay.enabled": "true",
 	}
 
 	flannelHelmOverrides = map[string]string{
@@ -184,7 +190,7 @@ func init() {
 			defaultHelmOptions["global.tag"] = version
 			// This always works because SplitContainerURL would not return
 			// isFullyQualified == true otherwise
-			parts := strings.SplitN(image, "/", 1)
+			parts := strings.SplitN(image, "/", 2)
 			defaultHelmOptions["global.registry"] = registry + "/" + parts[0]
 		}
 	}
