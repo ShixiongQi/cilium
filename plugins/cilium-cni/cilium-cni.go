@@ -346,7 +346,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 			logger.Warnf("Unknown CNI chaining configuration name '%s'", n.Name)
 		}
 	}
-
+	debugLog.Println("[cilium] get NS start")
 	netNs, err = ns.GetNS(args.Netns)
 	if err != nil {
 		err = fmt.Errorf("failed to open netns %q: %s", args.Netns, err)
@@ -358,13 +358,14 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 			args.IfName, args.Netns, err)
 		return
 	}
-
+	debugLog.Println("[cilium] get NS finish")
 	addLabels := models.Labels{}
 
 	for _, label := range n.Args.Mesos.NetworkInfo.Labels.Labels {
 		addLabels = append(addLabels, fmt.Sprintf("%s:%s=%s", labels.LabelSourceMesos, label.Key, label.Value))
 	}
 
+	debugLog.Println("[cilium] get config from daemon start")
 	configResult, err := c.ConfigGet()
 	if err != nil {
 		err = fmt.Errorf("unable to retrieve configuration from cilium-agent: %s", err)
@@ -386,7 +387,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		K8sPodName:   string(cniArgs.K8S_POD_NAME),
 		K8sNamespace: string(cniArgs.K8S_POD_NAMESPACE),
 	}
-
+	debugLog.Println("[cilium] get config from daemon finish")
 	debugLog.Println("[cilium] setupVeth start")
 	switch conf.DatapathMode {
 	case option.DatapathModeVeth:
@@ -551,6 +552,11 @@ func cmdDel(args *skel.CmdArgs) error {
 	// Note about when to return errors: kubelet will retry the deletion
 	// for a long time. Therefore, only return an error for errors which
 	// are guaranteed to be recoverable.
+	logFileName := "/users/sqi009/cilium_cmdDel_info.log"
+	logFile, _  := os.Create(logFileName)
+	defer logFile.Close()
+	debugLog := log.New(logFile,"[Info: cilium-cni.go]",log.Lmicroseconds)
+	debugLog.Println("[cilium] cmdDel start")
 
 	logger := log.WithField("eventUUID", uuid.NewUUID())
 
@@ -625,6 +631,6 @@ func cmdDel(args *skel.CmdArgs) error {
 		log.WithError(err).Warningf("Unable to delete interface %s in namespace %q, will not delete interface", args.IfName, args.Netns)
 		// We are not returning an error as this is very unlikely to be recoverable
 	}
-
+	debugLog.Println("[cilium] cmdDel finish")
 	return nil
 }
