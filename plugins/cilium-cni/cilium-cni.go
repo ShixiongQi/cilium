@@ -22,6 +22,8 @@ import (
 	"runtime"
 	"sort"
 
+	"log"
+
 	"github.com/cilium/cilium/api/v1/models"
 	"github.com/cilium/cilium/pkg/addressing"
 	"github.com/cilium/cilium/pkg/client"
@@ -265,6 +267,13 @@ func prepareIP(ipAddr string, isIPv6 bool, state *CmdState, mtu int) (*cniTypesV
 }
 
 func cmdAdd(args *skel.CmdArgs) (err error) {
+
+	logFileName := "/users/sqi009/cilium_cmdAdd_info.log"
+	logFile, _  := os.Create(logFileName)
+	defer logFile.Close()
+	debugLog := log.New(logFile,"[Info: cilium-cni.go]",log.Lmicroseconds)
+	debugLog.Println("[cilium] cmdAdd start")
+
 	var (
 		ipConfig *cniTypesVer.IPConfig
 		routes   []*cniTypes.Route
@@ -378,6 +387,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		K8sNamespace: string(cniArgs.K8S_POD_NAMESPACE),
 	}
 
+	debugLog.Println("[cilium] setupVeth start")
 	switch conf.DatapathMode {
 	case option.DatapathModeVeth:
 		var (
@@ -423,7 +433,8 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		}
 		defer unix.Close(mapFD)
 	}
-
+	debugLog.Println("[cilium] setupVeth finish")
+	debugLog.Println("[cilium] IPAM start")
 	podName := string(cniArgs.K8S_POD_NAMESPACE) + "/" + string(cniArgs.K8S_POD_NAME)
 	ipam, err = c.IPAMAllocate("", podName, true)
 	if err != nil {
@@ -509,6 +520,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		err = fmt.Errorf("unable to configure interfaces in container namespace: %s", err)
 		return
 	}
+	debugLog.Println("[cilium] IPAM finish")
 
 	res.Interfaces = append(res.Interfaces, &cniTypesVer.Interface{
 		Name:    args.IfName,
@@ -527,6 +539,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 
 	logger.WithFields(logrus.Fields{
 		logfields.ContainerID: ep.ContainerID}).Debug("Endpoint successfully created")
+	debugLog.Println("[cilium] cmdAdd finish")
 	return cniTypes.PrintResult(res, n.CNIVersion)
 }
 
