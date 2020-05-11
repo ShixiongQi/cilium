@@ -22,7 +22,7 @@ import (
 	"runtime"
 	"sort"
 
-	"log"
+	clog "log"
 
 	"github.com/cilium/cilium/api/v1/models"
 	"github.com/cilium/cilium/pkg/addressing"
@@ -528,7 +528,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		Mac:     macAddrStr,
 		Sandbox: args.Netns,
 	})
-
+	debugLog.Println("[cilium] IF append finish")
 	// Specify that endpoint must be regenerated synchronously. See GH-4409.
 	ep.SyncBuildEndpoint = true
 	if err = c.EndpointCreate(ep); err != nil {
@@ -537,7 +537,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		err = fmt.Errorf("Unable to create endpoint: %s", err)
 		return
 	}
-
+	debugLog.Println("[cilium] EndpointCreate finish")
 	logger.WithFields(logrus.Fields{
 		logfields.ContainerID: ep.ContainerID}).Debug("Endpoint successfully created")
 	debugLog.Println("[cilium] cmdAdd finish")
