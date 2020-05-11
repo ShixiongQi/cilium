@@ -271,7 +271,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 	logFileName := "/users/sqi009/cilium_cmdAdd_info.log"
 	logFile, _  := os.Create(logFileName)
 	defer logFile.Close()
-	debugLog := log.New(logFile,"[Info: cilium-cni.go]",log.Lmicroseconds)
+	debugLog := clog.New(logFile,"[Info: cilium-cni.go]",clog.Lmicroseconds)
 	debugLog.Println("[cilium] cmdAdd start")
 
 	var (
@@ -555,7 +555,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	logFileName := "/users/sqi009/cilium_cmdDel_info.log"
 	logFile, _  := os.Create(logFileName)
 	defer logFile.Close()
-	debugLog := log.New(logFile,"[Info: cilium-cni.go]",log.Lmicroseconds)
+	debugLog := clog.New(logFile,"[Info: cilium-cni.go]",clog.Lmicroseconds)
 	debugLog.Println("[cilium] cmdDel start")
 
 	logger := log.WithField("eventUUID", uuid.NewUUID())
