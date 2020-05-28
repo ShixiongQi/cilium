@@ -19,7 +19,7 @@ import (
 	"net"
 
 	"os"
-	"log"
+	clog "log"
 
 	"github.com/cilium/cilium/api/v1/models"
 	"github.com/cilium/cilium/pkg/datapath/link"
@@ -37,7 +37,7 @@ func SetupVethRemoteNs(netNs ns.NetNS, srcIfName, dstIfName string) (int, int, e
 	logFileName := "/users/sqi009/cilium-start-time.log"
 	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
 	defer logFile.Close()
-	debugLog := log.New(logFile,"[Info: veth.go]",log.Lmicroseconds)
+	debugLog := clog.New(logFile,"[Info: veth.go]",clog.Lmicroseconds)
 	debugLog.Println("[cilium] netNs.Do(func(_ ns.NetNS) start")
 
 	return 0, 0, netNs.Do(func(_ ns.NetNS) error {
