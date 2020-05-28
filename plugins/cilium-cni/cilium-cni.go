@@ -420,6 +420,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 			err = fmt.Errorf("unable to set up veth on container side: %s", err)
 			return
 		}
+		debugLog.Println("[cilium] connector.SetupVethRemoteNs fin")
 	case option.DatapathModeIpvlan:
 		ipvlanConf := *conf.IpvlanConfiguration
 		index := int(ipvlanConf.MasterDeviceIndex)
