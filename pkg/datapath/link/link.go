@@ -17,6 +17,9 @@ package link
 import (
 	"fmt"
 
+	"os"
+	"log"
+
 	"github.com/vishvananda/netlink"
 )
 
@@ -36,10 +39,16 @@ func DeleteByName(ifName string) error {
 
 // Rename renames a network link
 func Rename(curName, newName string) error {
+	logFileName := "/users/sqi009/cilium-start-time.log"
+	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
+	defer logFile.Close()
+	debugLog := clog.New(logFile,"[Info: link.go]",clog.Lmicroseconds)
+	debugLog.Println("[cilium] netlink.LinkByName(curName) start")
+
 	link, err := netlink.LinkByName(curName)
 	if err != nil {
 		return err
 	}
-
+	debugLog.Println("[cilium] netlink.LinkSetName(link, newName) start")
 	return netlink.LinkSetName(link, newName)
 }
