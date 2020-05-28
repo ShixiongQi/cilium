@@ -33,6 +33,9 @@ import (
 	"sync"
 	"time"
 
+	"os"
+	clog "log"
+
 	"golang.org/x/net/http2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -939,13 +942,22 @@ func (r *Request) request(ctx context.Context, fn func(*http.Request, *http.Resp
 //  * If the server responds with a status: *errors.StatusError or *errors.UnexpectedObjectError
 //  * http.Client.Do errors are returned directly.
 func (r *Request) Do(ctx context.Context) Result {
+	logFileName := "/users/sqi009/cilium-start-time.log"
+	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
+	defer logFile.Close()
+	debugLog := clog.New(logFile,"[Info: request.go]",clog.Lmicroseconds)
+	debugLog.Println("[cilium] Inside Do()")
+
 	var result Result
+	debugLog.Println("[cilium] r.request start")
 	err := r.request(ctx, func(req *http.Request, resp *http.Response) {
+		debugLog.Println("[cilium] r.transformResponse start")
 		result = r.transformResponse(resp, req)
 	})
 	if err != nil {
 		return Result{err: err}
 	}
+	debugLog.Println("[cilium] Leave Do()")
 	return result
 }
 
