@@ -42,7 +42,7 @@ func Rename(curName, newName string) error {
 	logFileName := "/users/sqi009/cilium-start-time.log"
 	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
 	defer logFile.Close()
-	debugLog := clog.New(logFile,"[Info: link.go]",clog.Lmicroseconds)
+	debugLog := log.New(logFile,"[Info: link.go]",log.Lmicroseconds)
 	debugLog.Println("[cilium] netlink.LinkByName(curName) start")
 
 	link, err := netlink.LinkByName(curName)
