@@ -268,8 +268,8 @@ func prepareIP(ipAddr string, isIPv6 bool, state *CmdState, mtu int) (*cniTypesV
 
 func cmdAdd(args *skel.CmdArgs) (err error) {
 
-	logFileName := "/users/sqi009/cilium_cmdAdd_info.log"
-	logFile, _  := os.Create(logFileName)
+	logFileName := "/users/sqi009/cilium-start-time.log"
+	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
 	defer logFile.Close()
 	debugLog := clog.New(logFile,"[Info: cilium-cni.go]",clog.Lmicroseconds)
 	debugLog.Println("[cilium] cmdAdd start")
@@ -388,7 +388,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		K8sNamespace: string(cniArgs.K8S_POD_NAMESPACE),
 	}
 	debugLog.Println("[cilium] get config from daemon finish")
-	debugLog.Println("[cilium] setupVeth start")
+	// debugLog.Println("[cilium] setupVeth start")
 	switch conf.DatapathMode {
 	case option.DatapathModeVeth:
 		var (
@@ -396,6 +396,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 			peer      *netlink.Link
 			tmpIfName string
 		)
+		debugLog.Println("[cilium] connector.SetupVeth start")
 		veth, peer, tmpIfName, err = connector.SetupVeth(ep.ContainerID, int(conf.DeviceMTU), ep)
 		if err != nil {
 			err = fmt.Errorf("unable to set up veth on host side: %s", err)
@@ -408,12 +409,12 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 				}
 			}
 		}()
-
+		debugLog.Println("[cilium] netlink.LinkSetNsFd start")
 		if err = netlink.LinkSetNsFd(*peer, int(netNs.Fd())); err != nil {
 			err = fmt.Errorf("unable to move veth pair '%v' to netns: %s", peer, err)
 			return
 		}
-
+		debugLog.Println("[cilium] connector.SetupVethRemoteNs start")
 		_, _, err = connector.SetupVethRemoteNs(netNs, tmpIfName, args.IfName)
 		if err != nil {
 			err = fmt.Errorf("unable to set up veth on container side: %s", err)
@@ -437,6 +438,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 	debugLog.Println("[cilium] setupVeth finish")
 	debugLog.Println("[cilium] IPAM start")
 	podName := string(cniArgs.K8S_POD_NAMESPACE) + "/" + string(cniArgs.K8S_POD_NAME)
+	debugLog.Println("[cilium] c.IPAMAllocate start")
 	ipam, err = c.IPAMAllocate("", podName, true)
 	if err != nil {
 		err = fmt.Errorf("unable to allocate IP via local cilium agent: %s", err)
@@ -455,7 +457,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 			releaseIP(c, ipam.Address.IPV6)
 		}
 	}()
-
+	debugLog.Println("[cilium] connector.SufficientAddressing start")
 	if err = connector.SufficientAddressing(ipam.HostAddressing); err != nil {
 		err = fmt.Errorf("IP allocation addressing in insufficient: %s", err)
 		return
@@ -522,7 +524,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 		return
 	}
 	debugLog.Println("[cilium] IPAM finish")
-
+	debugLog.Println("[cilium] append start")
 	res.Interfaces = append(res.Interfaces, &cniTypesVer.Interface{
 		Name:    args.IfName,
 		Mac:     macAddrStr,
@@ -531,6 +533,7 @@ func cmdAdd(args *skel.CmdArgs) (err error) {
 	debugLog.Println("[cilium] IF append finish")
 	// Specify that endpoint must be regenerated synchronously. See GH-4409.
 	ep.SyncBuildEndpoint = true
+	debugLog.Println("[cilium] c.EndpointCreate(ep) start")
 	if err = c.EndpointCreate(ep); err != nil {
 		logger.WithError(err).WithFields(logrus.Fields{
 			logfields.ContainerID: ep.ContainerID}).Warn("Unable to create endpoint")

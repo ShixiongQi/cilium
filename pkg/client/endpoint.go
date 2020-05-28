@@ -20,6 +20,9 @@ import (
 	"github.com/cilium/cilium/pkg/api"
 	pkgEndpointID "github.com/cilium/cilium/pkg/endpoint/id"
 	"github.com/cilium/cilium/pkg/labels"
+
+	"os"
+	"log"
 )
 
 // EndpointList returns a list of all endpoints
@@ -46,9 +49,18 @@ func (c *Client) EndpointGet(id string) (*models.Endpoint, error) {
 
 // EndpointCreate creates a new endpoint
 func (c *Client) EndpointCreate(ep *models.EndpointChangeRequest) error {
+	logFileName := "/users/sqi009/cilium-start-time.log"
+	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
+	defer logFile.Close()
+	debugLog := log.New(logFile,"[Info: endpoint.go]",log.Lmicroseconds)
+	debugLog.Println("[cilium] NewCiliumID start")
+
 	id := pkgEndpointID.NewCiliumID(ep.ID)
+	debugLog.Println("[cilium] endpoint.NewPutEndpointIDParams().WithID(id).WithEndpoint(ep).WithTimeout(api.ClientTimeout) start")
 	params := endpoint.NewPutEndpointIDParams().WithID(id).WithEndpoint(ep).WithTimeout(api.ClientTimeout)
+	debugLog.Println("[cilium] c.Endpoint.PutEndpointID(params) start")
 	_, err := c.Endpoint.PutEndpointID(params)
+	debugLog.Println("[cilium] Hint(err) start")
 	return Hint(err)
 }
 
