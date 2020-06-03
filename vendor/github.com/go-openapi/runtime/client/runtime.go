@@ -31,8 +31,8 @@ import (
 	"sync"
 	"time"
 
-	"os"
-	clog "log"
+	// "os"
+	// clog "log"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/logger"
@@ -335,14 +335,14 @@ func (r *Runtime) EnableConnectionReuse() {
 // Submit a request and when there is a body on success it will turn that into the result
 // all other things are turned into an api error for swagger which retains the status code
 func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error) {
-	logFileName := "/users/sqi009/cilium-start-time.log"
-	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
-	defer logFile.Close()
-	debugLog := clog.New(logFile,"[Info: runtime.go]",clog.Lmicroseconds)
-	debugLog.Println("[cilium] Inside Submit()")
+	// logFileName := "/users/sqi009/___cilium-start-time.log"
+	// logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
+	// defer logFile.Close()
+	// debugLog := clog.New(logFile,"[Info: runtime.go]",clog.Lmicroseconds)
+	// debugLog.Println("[cilium] Inside Submit()")
 
 	params, readResponse, auth := operation.Params, operation.Reader, operation.AuthInfo
-	debugLog.Println("[cilium] newRequest start")
+	// debugLog.Println("[cilium] newRequest start")
 	request, err := newRequest(operation.Method, operation.PathPattern, params)
 	if err != nil {
 		return nil, err
@@ -350,7 +350,7 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 
 	var accept []string
 	accept = append(accept, operation.ProducesMediaTypes...)
-	debugLog.Println("[cilium] request.SetHeaderParam start")
+	// debugLog.Println("[cilium] request.SetHeaderParam start")
 	if err = request.SetHeaderParam(runtime.HeaderAccept, accept...); err != nil {
 		return nil, err
 	}
@@ -377,23 +377,23 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 	if _, ok := r.Producers[cmt]; !ok && cmt != runtime.MultipartFormMime && cmt != runtime.URLencodedFormMime {
 		return nil, fmt.Errorf("none of producers: %v registered. try %s", r.Producers, cmt)
 	}
-	debugLog.Println("[cilium] request.buildHTTP start")
+	// debugLog.Println("[cilium] request.buildHTTP start")
 	req, err := request.buildHTTP(cmt, r.BasePath, r.Producers, r.Formats, auth)
 	if err != nil {
 		return nil, err
 	}
-	debugLog.Println("[cilium] r.pickScheme(operation.Schemes) start")
+	// debugLog.Println("[cilium] r.pickScheme(operation.Schemes) start")
 	req.URL.Scheme = r.pickScheme(operation.Schemes)
 	req.URL.Host = r.Host
 	req.Host = r.Host
-	debugLog.Println("[cilium] r.clientOnce.Do start")
+	// debugLog.Println("[cilium] r.clientOnce.Do start")
 	r.clientOnce.Do(func() {
 		r.client = &http.Client{
 			Transport: r.Transport,
 			Jar:       r.Jar,
 		}
 	})
-	debugLog.Println("[cilium] httputil.DumpRequestOut start")
+	// debugLog.Println("[cilium] httputil.DumpRequestOut start")
 	if r.Debug {
 		b, err2 := httputil.DumpRequestOut(req, true)
 		if err2 != nil {
@@ -409,7 +409,7 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 	} else {
 		hasTimeout = true
 	}
-	debugLog.Println("[cilium] context.Background() start")
+	// debugLog.Println("[cilium] context.Background() start")
 	if pctx == nil {
 		pctx = context.Background()
 	}
@@ -417,10 +417,10 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 	var cancel context.CancelFunc
 
 	if hasTimeout {
-		debugLog.Println("[cilium] context.WithCancel(pctx) start")
+		// debugLog.Println("[cilium] context.WithCancel(pctx) start")
 		ctx, cancel = context.WithCancel(pctx)
 	} else {
-		debugLog.Println("[cilium] context.WithTimeout(pctx, request.timeout) start")
+		// debugLog.Println("[cilium] context.WithTimeout(pctx, request.timeout) start")
 		ctx, cancel = context.WithTimeout(pctx, request.timeout)
 	}
 	defer cancel()
@@ -429,9 +429,9 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 	if client == nil {
 		client = r.client
 	}
-	debugLog.Println("[cilium] req.WithContext(ctx) start")
+	// debugLog.Println("[cilium] req.WithContext(ctx) start")
 	req = req.WithContext(ctx)
-	debugLog.Println("[cilium] client.Do(req) start")
+	// debugLog.Println("[cilium] client.Do(req) start")
 	res, err := client.Do(req) // make requests, by default follows 10 redirects before failing
 	if err != nil {
 		return nil, err
@@ -439,19 +439,19 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 	defer res.Body.Close()
 
 	if r.Debug {
-		debugLog.Println("[cilium] httputil.DumpResponse start")
+		// debugLog.Println("[cilium] httputil.DumpResponse start")
 		b, err2 := httputil.DumpResponse(res, true)
 		if err2 != nil {
 			return nil, err2
 		}
 		r.logger.Debugf("%s\n", string(b))
 	}
-	debugLog.Println("[cilium] res.Header.Get start")
+	// debugLog.Println("[cilium] res.Header.Get start")
 	ct := res.Header.Get(runtime.HeaderContentType)
 	if ct == "" { // this should really really never occur
 		ct = r.DefaultMediaType
 	}
-	debugLog.Println("[cilium] mime.ParseMediaType(ct) start")
+	// debugLog.Println("[cilium] mime.ParseMediaType(ct) start")
 	mt, _, err := mime.ParseMediaType(ct)
 	if err != nil {
 		return nil, fmt.Errorf("parse content type: %s", err)
@@ -464,7 +464,7 @@ func (r *Runtime) Submit(operation *runtime.ClientOperation) (interface{}, error
 			return nil, fmt.Errorf("no consumer: %q", ct)
 		}
 	}
-	debugLog.Println("[cilium] readResponse.ReadResponse(response{res}, cons) start")
+	// debugLog.Println("[cilium] readResponse.ReadResponse(response{res}, cons) start")
 	return readResponse.ReadResponse(response{res}, cons)
 }
 

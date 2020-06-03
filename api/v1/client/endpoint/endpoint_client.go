@@ -12,8 +12,8 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 
-	"os"
-	"log"
+	// "os"
+	// "log"
 )
 
 // New creates a new endpoint API client.
@@ -408,17 +408,17 @@ Creates a new endpoint
 
 */
 func (a *Client) PutEndpointID(params *PutEndpointIDParams) (*PutEndpointIDCreated, error) {
-	logFileName := "/users/sqi009/cilium-start-time.log"
-	logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
-	defer logFile.Close()
-	debugLog := log.New(logFile,"[Info: endpoint_client.go]",log.Lmicroseconds)
-	debugLog.Println("[cilium] Inside PutEndpointID")
-	debugLog.Println("[cilium] NewPutEndpointIDParams() start")
+	// logFileName := "/users/sqi009/cilium-start-time.log"
+	// logFile, _  := os.OpenFile(logFileName,os.O_RDWR|os.O_APPEND|os.O_CREATE,0644)
+	// defer logFile.Close()
+	// debugLog := log.New(logFile,"[Info: endpoint_client.go]",log.Lmicroseconds)
+	// debugLog.Println("[cilium] Inside PutEndpointID")
+	// debugLog.Println("[cilium] NewPutEndpointIDParams() start")
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewPutEndpointIDParams()
 	}
-	debugLog.Println("[cilium] a.transport.Submit start")
+	// debugLog.Println("[cilium] a.transport.Submit start")
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "PutEndpointID",
 		Method:             "PUT",
@@ -434,7 +434,7 @@ func (a *Client) PutEndpointID(params *PutEndpointIDParams) (*PutEndpointIDCreat
 	if err != nil {
 		return nil, err
 	}
-	debugLog.Println("[cilium] result.(*PutEndpointIDCreated) start")
+	// debugLog.Println("[cilium] result.(*PutEndpointIDCreated) start")
 	success, ok := result.(*PutEndpointIDCreated)
 	if ok {
 		return success, nil
@@ -442,7 +442,7 @@ func (a *Client) PutEndpointID(params *PutEndpointIDParams) (*PutEndpointIDCreat
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PutEndpointID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	debugLog.Println("[cilium] panic(msg) start")
+	// debugLog.Println("[cilium] panic(msg) start")
 	panic(msg)
 }
 
